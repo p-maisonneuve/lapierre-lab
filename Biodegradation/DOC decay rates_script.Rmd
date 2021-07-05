@@ -1,0 +1,363 @@
+---
+title: "Decay rates"
+output: html_document
+---
+
+
+Data read-in:
+```{r}
+
+data <- read.csv2("ISO_bio.csv", header=TRUE, row.names = 1)
+
+for (i in 1:3)
+{
+  
+  data[,2]/data1[1,2]
+  DOC_proportion[i,] <- (data[i,]/data[i,1])
+}
+
+```
+
+# This script fits one model at a time and derives the parameters of the curve fitted to your data
+
+
+# Non-linear least square estimates, for just one lake/river
+# This is only creating variables
+gammas = deriv(~(aa*(aa+xx)^-1)^vv,c("aa","vv"),function(xx,aa,vv){}) 
+
+
+# This is loging the curve
+loggammas=deriv(~(exp(aa)*(exp(aa)+xx)^-1)^exp(vv),c("aa","vv"),function(xx,aa,vv){})
+this.control=nls.control(maxiter = 500, tol = 1e-04, minFactor = 1/1024,printEval = FALSE, warnOnly = T)
+
+# Creating the model
+RCmodel_m = nls(DOC_proportion~loggammas(time_days,aa,vv),data=data,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+
+#############
+
+#Subsetting the data into less complicated datasets, per plant type
+microbial_grass_DOC <-subset(microbial_grass_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+microbial_pine_DOC <-subset(microbial_pine_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+microbial_oak_DOC <-subset(microbial_oak_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+microbial_wetland_DOC <-subset(microbial_wetland_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+
+coupled_grass_DOC <-subset(coupled_grass_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+coupled_pine_DOC <-subset(coupled_pine_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+coupled_oak_DOC <-subset(coupled_oak_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+coupled_tule_DOC <-subset(coupled_tule_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+coupled_cattail_DOC <-subset(coupled_tule_all, select=-c(time_hours:DOC_mM, DOC_percent.loss.day:endmember_NS.norm_.DALA))
+
+
+#Model for each plant type
+RCmodel_m.grass=nls(DOC_proportion~loggammas(time_days,aa,vv),data=microbial_grass_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+RCmodel_m.pine=nls(DOC_proportion~loggammas(time_days,aa,vv),data=microbial_pine_DOC,na.action=na.omit, start=log(c(aa=20.5,vv=0.1)),control=this.control)
+RCmodel_m.oak=nls(DOC_proportion~loggammas(time_days,aa,vv),data=microbial_oak_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+RCmodel_m.wetland=nls(DOC_proportion~loggammas(time_days,aa,vv),data=microbial_wetland_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+
+RCmodel_c.grass=nls(DOC_proportion~loggammas(time_days,aa,vv),data=coupled_grass_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+RCmodel_c.pine=nls(DOC_proportion~loggammas(time_days,aa,vv),data=coupled_pine_DOC,na.action=na.omit, start=log(c(aa=20.5,vv=0.1)),control=this.control)
+RCmodel_c.oak=nls(DOC_proportion~loggammas(time_days,aa,vv),data=coupled_oak_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+RCmodel_c.tule=nls(DOC_proportion~loggammas(time_days,aa,vv),data=coupled_tule_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+RCmodel_c.cattail=nls(DOC_proportion~loggammas(time_days,aa,vv),data=coupled_cattail_DOC,na.action=na.omit,start=log(c(aa=20,vv=0.1)),control=this.control)
+
+#Microbial grass model output
+RCmodel_m.grass
+summary(RCmodel_m.grass) # Gives you some model outputs
+(aaa_m.grass=exp(summary(RCmodel_m.grass)[[10]][1])) #Calculates a
+(vvv_m.grass=exp(summary(RCmodel_m.grass)[[10]][2])) #Calculates v
+(kkk_m.grass=vvv_m.grass/aaa_m.grass) # Calculates k
+
+#Microbial oak model output
+RCmodel_m.oak
+summary(RCmodel_m.oak) # Gives you some model outputs
+(aaa_m.oak=exp(summary(RCmodel_m.oak)[[10]][1])) #Calculates a
+(vvv_m.oak=exp(summary(RCmodel_m.oak)[[10]][2])) #Calculates v
+(kkk_m.oak=vvv_m.oak/aaa_m.oak) # Calculates k
+
+#Microbial pine model output
+RCmodel_m.pine
+summary(RCmodel_m.pine) # Gives you some model outputs
+(aaa_m.pine=exp(summary(RCmodel_m.pine)[[10]][1])) #Calculates a
+(vvv_m.pine=exp(summary(RCmodel_m.pine)[[10]][2])) #Calculates v
+(kkk_m.pine=vvv_m.pine/aaa_m.pine) # Calculates k
+
+#Microbial wetland model output
+RCmodel_m.wetland
+summary(RCmodel_m.wetland) # Gives you some model outputs
+(aaa_m.wetland=exp(summary(RCmodel_m.wetland)[[10]][1])) #Calculates a
+(vvv_m.wetland=exp(summary(RCmodel_m.wetland)[[10]][2])) #Calculates v
+(kkk_m.wetland=vvv_m.wetland/aaa_m.wetland) # Calculates k
+
+
+#Coupled grass model output
+RCmodel_c.grass
+summary(RCmodel_c.grass) # Gives you some model outputs
+(aaa_c.grass=exp(summary(RCmodel_c.grass)[[10]][1])) #Calculates a
+(vvv_c.grass=exp(summary(RCmodel_c.grass)[[10]][2])) #Calculates v
+(kkk_c.grass=vvv_c.grass/aaa_c.grass) # Calculates k
+
+#Coupled oak model output
+RCmodel_c.oak
+summary(RCmodel_c.oak) # Gives you some model outputs
+(aaa_c.oak=exp(summary(RCmodel_c.oak)[[10]][1])) #Calculates a
+(vvv_c.oak=exp(summary(RCmodel_c.oak)[[10]][2])) #Calculates v
+(kkk_c.oak=vvv_c.oak/aaa_c.oak) # Calculates k
+
+#Coupled pine model output
+RCmodel_c.pine
+summary(RCmodel_c.pine) # Gives you some model outputs
+(aaa_c.pine=exp(summary(RCmodel_c.pine)[[10]][1])) #Calculates a
+(vvv_c.pine=exp(summary(RCmodel_c.pine)[[10]][2])) #Calculates v
+(kkk_c.pine=vvv_c.pine/aaa_c.pine) # Calculates k
+
+#Coupled tule model output
+RCmodel_c.tule
+summary(RCmodel_c.tule) # Gives you some model outputs
+(aaa_c.tule=exp(summary(RCmodel_c.tule)[[10]][1])) #Calculates a
+(vvv_c.tule=exp(summary(RCmodel_c.tule)[[10]][2])) #Calculates v
+(kkk_c.tule=vvv_c.tule/aaa_c.tule) # Calculates k
+
+#Coupled cattail model output
+RCmodel_c.cattail
+summary(RCmodel_c.cattail) # Gives you some model outputs
+(aaa_c.cattail=exp(summary(RCmodel_c.cattail)[[10]][1])) #Calculates a
+(vvv_c.cattail=exp(summary(RCmodel_c.cattail)[[10]][2])) #Calculates v
+(kkk_c.cattail=vvv_c.cattail/aaa_c.cattail) # Calculates k
+
+
+
+# Calculate the initial probability distribution of decay coefficients                                              
+# And the decrease in k over time
+
+#Microbial grass k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_m.grass=pgamma(probxxx,vvv_m.grass,rate=aaa_m.grass)
+Day2=seq(0,1300,0.5)
+reactivity_time_m.grass=vvv_m.grass*((aaa_m.grass+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Microbial oak k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_m.oak=pgamma(probxxx,vvv_m.oak,rate=aaa_m.oak)
+Day2=seq(0,1300,0.5)
+reactivity_time_m.oak=vvv_m.oak*((aaa_m.oak+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Microbial pine k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_m.pine=pgamma(probxxx,vvv_m.pine,rate=aaa_m.pine)
+Day2=seq(0,1300,0.5)
+reactivity_time_m.pine=vvv_m.pine*((aaa_m.pine+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Microbial wetland k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_m.wetland=pgamma(probxxx,vvv_m.wetland,rate=aaa_m.wetland)
+Day2=seq(0,1300,0.5)
+reactivity_time_m.wetland=vvv_m.wetland*((aaa_m.wetland+Day2)^-1) # I like this one as you can see how k changes over time.
+
+
+#Coupled grass k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_c.grass=pgamma(probxxx,vvv_c.grass,rate=aaa_c.grass)
+Day2=seq(0,1300,0.5)
+reactivity_time_c.grass=vvv_c.grass*((aaa_c.grass+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Coupled oak k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_c.oak=pgamma(probxxx,vvv_c.oak,rate=aaa_c.oak)
+Day2=seq(0,1300,0.5)
+reactivity_time_c.oak=vvv_c.oak*((aaa_c.oak+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Coupled pine k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_c.pine=pgamma(probxxx,vvv_c.pine,rate=aaa_c.pine)
+Day2=seq(0,1300,0.5)
+reactivity_time_c.pine=vvv_c.pine*((aaa_c.pine+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Coupled tule k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_c.tule=pgamma(probxxx,vvv_c.tule,rate=aaa_c.tule)
+Day2=seq(0,1300,0.5)
+reactivity_time_c.tule=vvv_c.tule*((aaa_c.tule+Day2)^-1) # I like this one as you can see how k changes over time.
+
+#Coupled cattail k over time
+probxxx=seq(0,0.03,0.0001);probyyy=numeric();reactivity_time=numeric()
+probyyy_c.cattail=pgamma(probxxx,vvv_c.cattail,rate=aaa_c.cattail)
+Day2=seq(0,1300,0.5)
+reactivity_time_c.cattail=vvv_c.cattail*((aaa_c.cattail+Day2)^-1) # I like this one as you can see how k changes over time.
+
+# Generate some plots...
+plot(probxxx,probyyy_m.grass,type="l",col="black",lwd=2,xlim=c(0,0.03),ylim=c(0,0.4),xlab=expression(paste(italic(k)," (day"^{-1},")")),ylab="Probability") 
+windows()
+
+par(oma = c(2.5, 0, 0, 0))
+plot(Day2,reactivity_time_m.grass,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), cex=1.4, cex.axis=1.3, cex.lab=1.3) 
+lines(Day2,reactivity_time_m.oak,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=4)
+lines(Day2,reactivity_time_m.pine,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=2)
+lines(Day2,reactivity_time_m.wetland,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=3)
+lines(Day2,reactivity_time_c.grass,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=1)
+lines(Day2,reactivity_time_c.oak,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=4)
+lines(Day2,reactivity_time_c.pine,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=2)
+lines(Day2,reactivity_time_c.tule,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=5)
+lines(Day2,reactivity_time_c.cattail,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,0.3),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=6)
+axis(side=4, tick=TRUE, labels=FALSE, tcl=0.5)
+axis(side=3, tick=TRUE, labels=FALSE, tcl=0.5)
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottom", c("Grass", "Pine", "Mixed wetland", "Tule", "Cattail", "Oak"), xpd = TRUE, inset = c(0,0), lty = c(1,2, 3, 5, 6, 4), cex = 1, bty="n", ncol=3)
+
+# Evaluate reactivity classes, defined as in Koehler et al. 2012
+refractory=numeric();labile=numeric();semilabile=numeric()
+refractory = pgamma(0.001,vvv,rate=aaa,lower.tail=T) # <=0.001
+labile = 1-pgamma(0.005,vvv,rate=aaa,lower.tail=T) # >=0.005
+semilabile = 1-refractory-labile
+
+# This is the percentage of the DOC in each reactivity class
+refractory*100
+semilabile*100
+labile*100
+
+# **************************************************************************************************
+
+# Estimate the model parameters (Table 4) using a non-linear mixed effects model 
+# 'Category' was Clearwater vs. Brownwater lakes (fixed effect)
+# 'Lake' were the 3 different lakes per Category (random effects)
+# aa and vv are the model parameters (eq. 2)
+
+model = nlme(TOC~(aa*(aa+Day)^-1)^vv,fixed=aa+vv~Category-1,random=aa+vv~1|Lake,data=LabilityControl,
+na.action=na.exclude,start=c(aa=rep(2,2),vv=rep(0.01,2)),method="ML")
+
+model2 = nlme(TOC~(aa*(aa+Day)^-1)^vv,fixed=aa+vv~Category,random=aa+vv~1|Lake,data=LabilityControl,
+na.action=na.omit,start=c(aa=rep(2,2),vv=rep(0.01,2)),method="ML")
+
+
+summary(model) # gives the parameter estimates directly due to the command '-1' in the fixed effect
+
+# For statistical testing (in this case whether the parameter estimates differ between the
+# clear- and brownwater lakes) make a similar model but without the '-1' command:
+model2 = nlme(TOC~(aa*(aa+Day)^-1)^vv,fixed=aa+vv~Category,random=aa+vv~1|Lakesummary,data=LabilityControl,
+na.action=na.exclude,start=c(aa=rep(2,2),vv=rep(0.01,2)),method="ML")
+anova(model2) # Test for differences in the parameter estimates
+
+# Calculate the probability distributions (Fig. 3a)
+probxxx=seq(0,0.03,0.0001) # Range on the x-axis
+probyyy=matrix(ncol=2,nrow=length(probxxx))
+for (i in 1:2)
+{probyyy[,i]=pgamma(probxxx,fixef(model)[i+2],rate=fixef(model)[i])}  # rate is the parameter alpha from eq. 2
+
+#Plot results --> replace the i by 1 or 2 (or more depending on categories)
+plot(probxxx,probyyy[,2],type="l",col="forestgreen",lwd=2,xlim=c(0,0.03),ylim=c(0,1),xlab=expression(paste(italic(k)," (day"^{-1},")")),ylab="Probability") 
+
+#Add another line to the same graph
+lines(probxxx,probyyy[,1],type="l",col="brown",lwd=2,xlim=c(0,0.03),ylim=c(0,1),xlab=expression(paste(italic(k)," (day"^{-1},")")),ylab="Probability") #Add another line to the same graph
+
+
+# Calculate the reactivity classes 
+# I calculated these for each lake using the random effects, 
+# and gave the means and standard errors (Table 3) for each Category
+RC1=double();RC2=double();RC3=double()
+for (i in 1:6)
+{RC3[i] = pgamma(0.001,fixef(model)[3]+data.frame(ranef(model)[2])[i,1],
+rate=fixef(model)[1]+data.frame(ranef(model)[2])[i,1],lower.tail=T) # k<=0.001
+RC1[i] = 1-pgamma(0.01,fixef(model)[3]+data.frame(ranef(model)[2])[i,1],
+rate=fixef(model)[1]+data.frame(ranef(model)[2])[i,1],lower.tail=T) # k>=0.01
+RC2[i] = 1-RC1[i]-RC3[i]}
+
+
+##DECAY RATE PLOT - FIRST WEEK
+```{r}
+par(oma = c(2.5, 0, 0, 0))
+par(fig = c(0,1,0,1))
+plot(Day2,reactivity_time_m.grass,type="l",col="black",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), cex=1.4, cex.axis=1.3, cex.lab=1.3) 
+lines(Day2,reactivity_time_m.oak,type="l",col="black",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=4)
+lines(Day2,reactivity_time_m.pine,type="l",col="black",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=2)
+lines(Day2,reactivity_time_m.wetland,type="l",col="black",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=3)
+lines(Day2,reactivity_time_c.grass,type="l",col="red",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=1)
+lines(Day2,reactivity_time_c.oak,type="l",col="red",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=4)
+lines(Day2,reactivity_time_c.pine,type="l",col="red",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=2)
+lines(Day2,reactivity_time_c.tule,type="l",col="red",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=5)
+lines(Day2,reactivity_time_c.cattail,type="l",col="red",lwd=2,xlim=c(0,7),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=6)
+axis(side=4, tick=TRUE, labels=FALSE, tcl=0.5)
+axis(side=3, tick=TRUE, labels=FALSE, tcl=0.5)
+
+par(fig = c(0.4,0.9, 0.3, 0.95), new = T)  
+plot(Day2,reactivity_time_m.grass,type="l",col="black",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", cex=0.7, cex.axis=0.7, cex.lab=0.7) 
+lines(Day2,reactivity_time_m.oak,type="l",col="black",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", lty=4)
+lines(Day2,reactivity_time_m.pine,type="l",col="black",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", lty=2)
+lines(Day2,reactivity_time_m.wetland,type="l",col="black",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=3)
+lines(Day2,reactivity_time_c.grass,type="l",col="red",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", lty=1)
+lines(Day2,reactivity_time_c.oak,type="l",col="red",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", lty=4)
+lines(Day2,reactivity_time_c.pine,type="l",col="red",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", lty=2)
+lines(Day2,reactivity_time_c.tule,type="l",col="red",lwd=2,xlim=c(0,0.5),ylim=c(0,2),xlab="",ylab="", lty=5)
+lines(Day2,reactivity_time_c.cattail,type="l",col="red",lwd=2,xlim=c(0,0.5),ylim=c(0,1.8),xlab="",ylab="", lty=6)
+axis(side=4, tick=TRUE, labels=FALSE, tcl=0.5)
+axis(side=3, tick=TRUE, labels=FALSE, tcl=0.5)
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottom", c("Grass", "Pine", "Mixed wetland", "Tule", "Cattail", "Oak"), xpd = TRUE, inset = c(0,0), lty = c(1,2, 3, 5, 6, 4), lwd=2, cex = 1, bty="n", ncol=3)
+
+```
+
+##DECAY RATE PLOT - WHOLE INCUBATION
+```{r}
+par(oma = c(2.5, 0, 0, 0))
+par(fig = c(0,1,0,1))
+plot(Day2,reactivity_time_m.grass,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), cex=1.4, cex.axis=1.3, cex.lab=1.3) 
+lines(Day2,reactivity_time_m.oak,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=4)
+lines(Day2,reactivity_time_m.pine,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=2)
+lines(Day2,reactivity_time_m.wetland,type="l",col="black",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=3)
+lines(Day2,reactivity_time_c.grass,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=1)
+lines(Day2,reactivity_time_c.oak,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=4)
+lines(Day2,reactivity_time_c.pine,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=2)
+lines(Day2,reactivity_time_c.tule,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=5)
+lines(Day2,reactivity_time_c.cattail,type="l",col="red",lwd=2,xlim=c(0,160),ylim=c(0,1.8),xlab="Time (days)",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=6)
+axis(side=4, tick=TRUE, labels=FALSE, tcl=0.5)
+axis(side=3, tick=TRUE, labels=FALSE, tcl=0.5)
+
+par(fig = c(0.4,0.9, 0.3, 0.95), new = T)  
+plot(Day2,reactivity_time_m.grass,type="l",col="black",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", cex=0.7, cex.axis=0.7, cex.lab=0.7) 
+lines(Day2,reactivity_time_m.oak,type="l",col="black",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", lty=4)
+lines(Day2,reactivity_time_m.pine,type="l",col="black",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", lty=2)
+lines(Day2,reactivity_time_m.wetland,type="l",col="black",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab=expression(paste("Decay coefficient (day"^-1,")")), lty=3)
+lines(Day2,reactivity_time_c.grass,type="l",col="red",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", lty=1)
+lines(Day2,reactivity_time_c.oak,type="l",col="red",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", lty=4)
+lines(Day2,reactivity_time_c.pine,type="l",col="red",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", lty=2)
+lines(Day2,reactivity_time_c.tule,type="l",col="red",lwd=2,xlim=c(0,1),ylim=c(0,2),xlab="",ylab="", lty=5)
+lines(Day2,reactivity_time_c.cattail,type="l",col="red",lwd=2,xlim=c(0,1),ylim=c(0,1.8),xlab="",ylab="", lty=6)
+axis(side=4, tick=TRUE, labels=FALSE, tcl=0.5)
+axis(side=3, tick=TRUE, labels=FALSE, tcl=0.5)
+
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottom", c("Grass", "Pine", "Mixed wetland", "Tule", "Cattail", "Oak"), xpd = TRUE, inset = c(0,0), lty = c(1,2, 3, 5, 6, 4), cex = 1, bty="n", ncol=3)
+
+```
+
+
+##DOC vs. time
+```{r}
+par(oma = c(2.5, 0, 0, 0))
+plot(microbial_grass_all$time_days, microbial_grass_all$DOC_percent, main="", xlab="Time (days)", ylab="DOC remaining (%)", type="b", xlim=c(0, 160), ylim=c(1, 100), cex=1.4, lwd=2, cex.axis=1.3, cex.lab=1.3)
+lines(microbial_pine_all$time_days, microbial_pine_all$DOC_percent, col="black", lwd=2, lty=2)
+points(microbial_pine_all$time_days, microbial_pine_all$DOC_percent, col="black", pch=5, cex=1.4)
+lines(microbial_wetland_all$time_days, microbial_wetland_all$DOC_percent, col="black", lwd=2, lty=3)
+points(microbial_wetland_all$time_days, microbial_wetland_all$DOC_percent, col="black", pch=6, cex=1.4)
+lines(microbial_oak_all$time_days, microbial_oak_all$DOC_percent, col="black", lwd=2, lty=4)
+points(microbial_oak_all$time_days, microbial_oak_all$DOC_percent, col="black", pch=7, cex=1.4)
+axis(side=4, tick=TRUE, labels=FALSE, tcl=0.5)
+axis(side=3, tick=TRUE, labels=FALSE, tcl=0.5)
+lines(coupled_grass_all$time_days, coupled_grass_all$DOC_percent, col="red", lwd=2, lty=1)
+points(coupled_grass_all$time_days, coupled_grass_all$DOC_percent, col="red", pch=1, cex=1.4)
+lines(coupled_pine_all$time_days, coupled_pine_all$DOC_percent, col="red", lwd=2, lty=2)
+points(coupled_pine_all$time_days, coupled_pine_all$DOC_percent, col="red", pch=5, cex=1.4)
+lines(coupled_tule_all$time_days, coupled_tule_all$DOC_percent, col="red", lwd=2, lty=5)
+points(coupled_tule_all$time_days, coupled_tule_all$DOC_percent, col="red", pch=8, cex=1.4)
+lines(coupled_cattail_all$time_days, coupled_cattail_all$DOC_percent, col="red", lwd=2, lty=6)
+points(coupled_cattail_all$time_days, coupled_cattail_all$DOC_percent, col="red", pch=9, cex=1.4)
+lines(coupled_oak_all$time_days, coupled_oak_all$DOC_percent, col="red", lwd=2, lty=4)
+points(coupled_oak_all$time_days, coupled_oak_all$DOC_percent, col="red", pch=7, cex=1.4)
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottom", c("Grass", "Pine", "Mixed wetland", "Tule", "Cattail", "Oak"), xpd = TRUE, inset = c(0,0), lty = c(1,2, 3, 5, 6, 4), cex = 1, bty="n", ncol=3)
+
+```
+
